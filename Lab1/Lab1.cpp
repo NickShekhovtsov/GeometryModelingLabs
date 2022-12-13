@@ -8,6 +8,10 @@
 #include <string>
 #include <list>
 #include <iterator>
+#include "Textures.h"
+#include "Textures.h"
+#include "SDL_Adapter.h"
+#include "GameLoop.h"
 class IMGuiAdapter
 {
     public:
@@ -70,162 +74,11 @@ class IMGuiAdapter
         SDL_RenderPresent(renderer);*/
     }
 };
-class Textures
-{
-private:
-    std::list<std::string> paths;
-public:
-    std::string get_at(int index)
-    {
-        int count=0;
-        for (auto st : paths)
-        {
-            if (count == index)
-            {
-                return st;
-            }
-            else
-            {
-                count++;
-            }
-        }
-        return "";
-    }
-    void add_texture(std::string path)
-    {
-        paths.push_back(path);
-    }
 
-    void remove(std::string path)
-    {
-        auto iter = path.cbegin();
-        for (auto st : paths)
-        {
-            if (st == path)
-            {
-                path.erase(iter);
-            }
-            else
-            {
-                iter++;
-            }
-        }
-    }
-    int get_size()
-    {
-        return paths.size();
-    }
-};
-class SDL_Adapter
-{
-protected:
-    SDL_Window* window=nullptr;
-    SDL_Surface* bmp = nullptr;
-    SDL_Texture* tex = nullptr;
-    SDL_Renderer* renderer = nullptr;
-public:
-    void init(std::string title,int width,int height )
-    {
-        window = SDL_CreateWindow(title.c_str(),
-            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
-        if (!window)
-        {
-            std::cout << "Couldn't create window\n";
-            
-        }
+//Из того что планирую сделать прикрутить к game_loop фпс
+//Загрузка в текстуры не тольно фотографий, но и заливок
+//IMGui поле в SDL_Adapter, с методом добавлением кнопок, для кнопок, наверное, сделаю интерфейс, чтобы от него можно было наследоваться
 
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-        if (!renderer)
-        {
-            std::cout << "Couldn't create renderer\n";
-        }
-    }
-
-    void set_texture(std::string path)
-    {
-        bmp = SDL_LoadBMP(path.c_str());
-        tex = SDL_CreateTextureFromSurface(renderer, bmp);
-        SDL_FreeSurface(bmp);
-        
-    }
-
-    void show_texture()
-    {
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, tex, NULL, NULL);
-        SDL_RenderPresent(renderer);
-        //SDL_Delay(2000);
-    }
-
-    SDL_Texture* get_text()
-    {
-        return tex;
-    }
-
-    SDL_Adapter()
-    {
-        if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
-        {
-            std::cout << "SDL init falure\n";
-        }
-    }
-
-    ~SDL_Adapter()
-    {
-        SDL_DestroyTexture(tex);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-    }
-};
-
-class GameLoop
-{
-    SDL_Adapter* sdl;
-    Textures textures;
-public:
-    void run()
-    {
-        bool work = true;
-        SDL_Event e;
-        IMGuiAdapter ad;
-       
-        while (work) {
-            while (SDL_PollEvent(&e) != 0) {
-                if (e.type == SDL_QUIT) {
-                    work = false;
-                }
-
-                if (e.type == SDL_KEYDOWN) {
-                    if (e.key.keysym.sym == SDLK_UP) {
-                        sdl->set_texture(textures.get_at(0));
-
-                    }
-                    if (e.key.keysym.sym == SDLK_DOWN) {
-                        sdl->set_texture(textures.get_at(1));
-
-                    }
-                    if (e.key.keysym.sym == SDLK_RIGHT) {
-
-                    }
-                    if (e.key.keysym.sym == SDLK_LEFT) {
-
-                    }
-                }
-            }
-
-            sdl->show_texture();
-
-        }
-    }
-
-    void init(SDL_Adapter* sdl,Textures textures)
-    {
-        this->sdl = sdl;
-        this->textures = textures;
-    }
-
-};
 int main(int argc, char** argv)
 {
    
@@ -235,18 +88,12 @@ int main(int argc, char** argv)
     textures.add_texture("H:\\Tests\\123.bmp");
     textures.add_texture("H:\\Tests\\222.bmp");
     sdl->init("my_own", 400, 400);
-    //sdl.set_texture(textures.get_at(0));
-    //sdl.show_texture();
    
-
-    ////SDL_Delay(1000);
-    //sdl.set_texture(textures.get_at(1));
-    //sdl.show_texture();
-
     GameLoop game;
     game.init(sdl, textures);
     game.run();
    
+    
     //SDL_Delay(1000);
     /*for (int i = 0; i < bufferForUpdate.size(); i++)
     {
